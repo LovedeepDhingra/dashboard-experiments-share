@@ -25,6 +25,7 @@ st.markdown("""
     .metric-label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
     
     /* Cleaner Button Styling */
+    /* Icons are added directly in the button text, styling handles layout */
     .stButton>button { 
         width: 100%; 
         border-radius: 8px; 
@@ -33,6 +34,7 @@ st.markdown("""
         background-color: #f0f2f6;
         color: #31333F;
         transition: all 0.2s;
+        font-weight: 600;
     }
     .stButton>button:hover {
         background-color: #e1e4e8;
@@ -119,13 +121,13 @@ with st.sidebar:
         tests_config.append({"name": t_name, "sensitivity": sens, "specificity": spec})
         st.markdown("---")
 
-    # Cleaner Action Buttons
+    # Cleaner Action Buttons with Icons First
     b_col1, b_col2 = st.columns(2)
     with b_col1:
         st.button("➕ Add Test", on_click=add_test, use_container_width=True)
     with b_col2:
         disabled_status = st.session_state['num_tests'] <= 1
-        st.button("➖ Remove", on_click=remove_test, disabled=disabled_status, use_container_width=True)
+        st.button("➖ Remove Test", on_click=remove_test, disabled=disabled_status, use_container_width=True)
 
 # ==========================================
 # MAIN DASHBOARD RENDERING
@@ -151,21 +153,24 @@ def metric_card(col, label, val):
     </div>
     """, unsafe_allow_html=True)
 
+# Reordered Metrics as requested:
+# Row 1: Sens, Spec, Screen Pos Rate, Screen Neg Rate
 r2_col1, r2_col2, r2_col3, r2_col4 = st.columns(4)
 metric_card(r2_col1, "Global Sensitivity", f"{summary['Global Sens']:.1f}%")
 metric_card(r2_col2, "Global Specificity", f"{summary['Global Spec']:.1f}%")
-metric_card(r2_col3, "Global PPV", f"{summary['Global PPV']:.1f}%")
-metric_card(r2_col4, "Global NPV", f"{summary['Global NPV']:.1f}%")
+metric_card(r2_col3, "Screen Positivity Rate", f"{summary['Screen Pos Rate']:.1f}%")
+metric_card(r2_col4, "Screen Negativity Rate", f"{summary['Screen Neg Rate']:.1f}%")
 
+# Row 2: PPV, NPV, LR+, LR-
 r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
-metric_card(r3_col1, "Positive LR (LR+)", f"{summary['Global LR+']:.1f}")
-metric_card(r3_col2, "Negative LR (LR-)", f"{summary['Global LR-']:.2f}")
-metric_card(r3_col3, "Screen Pos Rate", f"{summary['Screen Pos Rate']:.1f}%")
-metric_card(r3_col4, "Screen Neg Rate", f"{summary['Screen Neg Rate']:.1f}%")
+metric_card(r3_col1, "Global PPV", f"{summary['Global PPV']:.1f}%")
+metric_card(r3_col2, "Global NPV", f"{summary['Global NPV']:.1f}%")
+metric_card(r3_col3, "Positive LR (LR+)", f"{summary['Global LR+']:.1f}")
+metric_card(r3_col4, "Negative LR (LR-)", f"{summary['Global LR-']:.2f}")
 
 st.markdown("---")
 
-# ROW 3: Population Comparison (Updated Titles & Content)
+# ROW 3: Population Comparison
 st.subheader("3. Population Comparison")
 row3_left, row3_right = st.columns(2)
 
@@ -178,7 +183,7 @@ with row3_left:
     """, unsafe_allow_html=True)
     fig_truth = visuals.create_ground_truth_waffle(
         summary['Diseased'], summary['Healthy'], 
-        title="Disease Prevalence"
+        title="Ground Truth Breakdown"
     )
     st.plotly_chart(fig_truth, use_container_width=True)
 
@@ -192,13 +197,13 @@ with row3_right:
     fig_final = visuals.create_waffle_chart(
         summary['Final TP'], summary['Final FP'], 
         summary['Final FN'], summary['Final TN'],
-        title="Screening Approach Results"
+        title="Final Screening Outcome"
     )
     st.plotly_chart(fig_final, use_container_width=True)
 
 st.markdown("---")
 
-# ROW 4+: Individual Steps (Comprehensive Metrics)
+# ROW 4+: Individual Steps
 st.subheader("4. Step-by-Step Test Performance")
 for step in results['history']:
     st.markdown(f"### {step['test_name']}")
@@ -220,10 +225,10 @@ for step in results['history']:
         - <span style='color:#FBC02D'><b>FP:</b> {step['FP']}</span> | <span style='color:#43A047'><b>TN:</b> {step['TN']}</span>
         
         **Metrics:**
-        -  **Sensitivity:** {step['sens']:.1f}% | **Specificity:** {step['spec']:.1f}%
-        -  **Screen Positivity Rate:** {step['pos_rate']*100:.1f}% | **Screen Negativity Rate:** {step['neg_rate']*100:.1f}%
-        -  **PPV:** {step_ppv:.1f}% | **NPV:** {step_npv:.1f}%
-        -  **LR+:** {step['lr_plus']:.1f} | **LR-:** {step['lr_minus']:.2f}
+        - **Sensitivity:** {step['sens']:.1f}% | **Specificity:** {step['spec']:.1f}%
+        - **Screen Positivity Rate:** {step['pos_rate']*100:.1f}% | **Screen Negativity Rate:** {step['neg_rate']*100:.1f}%
+        - **PPV:** {step_ppv:.1f}% | **NPV:** {step_npv:.1f}%
+        - **LR+:** {step['lr_plus']:.1f} | **LR-:** {step['lr_minus']:.2f}
         """, unsafe_allow_html=True)
         
     with c_right:

@@ -26,8 +26,11 @@ COLORS = {
 def create_sankey(results):
     """
     Creates a rigorous Sequential Sankey Diagram.
-    The node text is styled for high readability in light mode.
-    The 'Truth' layer is ordered to try and place 'Diseased' on top.
+    
+    LOGIC UPDATE:
+    - Dynamic Ordering: The code checks if Diseased or Healthy is the smaller population.
+    - The smaller population is added to the node list FIRST. 
+    - This hints the Plotly layout engine to render it at the top of the chart.
     """
     summary = results['summary']
     history = results['history']
@@ -44,22 +47,47 @@ def create_sankey(results):
     colors.append("lightgrey")
     idx_pop = 0
     
-    # --- LAYER 1: Truth ---
-    # Added 'Diseased' first to encourage Plotly to place it at the top.
-    labels.extend(["Diseased (Truth)", "Healthy (Truth)"])
-    colors.extend([COLORS["Diseased"], COLORS["Healthy"]])
-    idx_dis = 1
-    idx_health = 2
+    # --- LAYER 1: Truth (Dynamic Sorting) ---
     
-    # Link Pop -> Truth
-    sources.extend([idx_pop, idx_pop])
-    targets.extend([idx_dis, idx_health])
-    values.extend([summary['Diseased'], summary['Healthy']])
-    link_colors.extend([COLORS["LinkDiseased"], COLORS["LinkHealthy"]])
+    # Determine which group is smaller to place it 'on top' (first in list)
+    num_d = summary['Diseased']
+    num_h = summary['Healthy']
     
-    # Pointers for the next layer
-    prev_tp_idx = idx_dis   # The node holding the sick people
-    prev_fp_idx = idx_health # The node holding the healthy people
+    # We define the order we want to add them. 
+    # Tuple structure: (Name, Count, Color, LinkColor, TypeKey)
+    d_data = ("Diseased (Truth)", num_d, COLORS["Diseased"], COLORS["LinkDiseased"], "D")
+    h_data = ("Healthy (Truth)", num_h, COLORS["Healthy"], COLORS["LinkHealthy"], "H")
+    
+    # If Diseased is smaller (or equal), it goes first. Otherwise Healthy goes first.
+    if num_d <= num_h:
+        layer1_order = [d_data, h_data]
+    else:
+        layer1_order = [h_data, d_data]
+        
+    # Variables to store the indices for the next step
+    # We need to know where 'Diseased' and 'Healthy' ended up in the node list
+    prev_indices = {} 
+    
+    for item in layer1_order:
+        name, count, color, link_col, type_key = item
+        
+        # Add Node
+        current_idx = len(labels)
+        labels.append(name)
+        colors.append(color)
+        
+        # Add Link from Pop -> This Node
+        sources.append(idx_pop)
+        targets.append(current_idx)
+        values.append(count)
+        link_colors.append(link_col)
+        
+        # Store index for the next layer's logic
+        prev_indices[type_key] = current_idx
+
+    # Set pointers for the next loop
+    prev_tp_idx = prev_indices["D"]  # The node holding the sick people
+    prev_fp_idx = prev_indices["H"]  # The node holding the healthy people
     
     # --- LAYER 2...N: Tests ---
     for step in history:
@@ -67,6 +95,7 @@ def create_sankey(results):
         base_idx = len(labels)
         
         # Create 4 explicit nodes for every test layer
+        # Order: TP, FN, FP, TN
         new_labels = [
             f"{t_name} TP", 
             f"{t_name} FN", 
@@ -105,8 +134,7 @@ def create_sankey(results):
 
     # --- GENERATE FIGURE ---
     fig = go.Figure(data=[go.Sankey(
-        # FIX: textfont belongs here, at the trace level.
-        # Set to black for readability in light mode.
+        # Text styling: Black for readability in light mode
         textfont=dict(color="black", size=12),
         node=dict(
             pad=15,
@@ -129,6 +157,7 @@ def create_sankey(results):
 def create_waffle_chart(tp, fp, fn, tn, title, total_dots=625):
     """
     Creates a 25x25 Waffle Chart (Dot Matrix) to humanize the data.
+    Uses a fixed grid size (625 dots) so visuals are comparable across different N.
     """
     total_people = tp + fp + fn + tn
     if total_people == 0: return go.Figure()
@@ -186,7 +215,7 @@ def create_waffle_chart(tp, fp, fn, tn, title, total_dots=625):
 
 def create_ground_truth_waffle(diseased, healthy, title, total_dots=625):
     """
-    Special Waffle for Ground Truth (2 Categories).
+    Special Waffle for Ground Truth (2 Categories: Diseased vs Healthy).
     """
     total = diseased + healthy
     if total == 0: return go.Figure()
