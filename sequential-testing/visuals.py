@@ -5,16 +5,13 @@ import math
 # COLOR PALETTE DEFINITION
 # ---------------------------------------------------------
 # We use distinct colors for TP/FP/TN/FN to create a traffic-light effect.
-# Diseased (Truth) is now distinct from FN.
 COLORS = {
-    # The 4 Confusion Matrix States
     "TP": "#E67E22",       # Orange (Detected Disease)
     "FP": "#FBC02D",       # Yellow (Warning / False Alarm)
     "TN": "#43A047",       # Green (Safe / Correctly Cleared)
-    "FN": "#D32F2F",       # Bright Red (Danger / Missed Case) - CHANGED
+    "FN": "#D32F2F",       # Bright Red (Danger / Missed Case)
     
-    # The Ground Truth States
-    "Diseased": "#8D6E63", # Rust/Brown (Deep Earthy Tone) - CHANGED to be distinct from FN
+    "Diseased": "#8D6E63", # Rust/Brown (Deep Earthy Tone)
     "Healthy": "#2E7D32",  # Dark Green 
     
     # Transparent Link Colors for Sankey Flow
@@ -29,17 +26,8 @@ COLORS = {
 def create_sankey(results):
     """
     Creates a rigorous Sequential Sankey Diagram.
-    
-    LOGIC FIX:
-    Instead of merging nodes, we keep TP and FP separate at every stage.
-    Structure:
-    Layer 0: Population
-    Layer 1: Truth (Diseased vs Healthy)
-    Layer 2 (Test 1): T1_TP, T1_FN, T1_FP, T1_TN
-    Layer 3 (Test 2): T2_TP, T2_FN, T2_FP, T2_TN
-    ... and so on.
-    
-    This ensures the color flows remain pure (e.g. Disease stream stays Brown/Orange/Red).
+    The node text is styled for high readability.
+    The 'Truth' layer is ordered to try and place 'Diseased' on top.
     """
     summary = results['summary']
     history = results['history']
@@ -57,7 +45,7 @@ def create_sankey(results):
     idx_pop = 0
     
     # --- LAYER 1: Truth ---
-    # We add Diseased first.
+    # Added 'Diseased' first to encourage Plotly to place it at the top.
     labels.extend(["Diseased (Truth)", "Healthy (Truth)"])
     colors.extend([COLORS["Diseased"], COLORS["Healthy"]])
     idx_dis = 1
@@ -69,8 +57,7 @@ def create_sankey(results):
     values.extend([summary['Diseased'], summary['Healthy']])
     link_colors.extend([COLORS["LinkDiseased"], COLORS["LinkHealthy"]])
     
-    # We track the indices of the "Active" nodes that feed the next test.
-    # Initially, these are the Truth nodes.
+    # Pointers for the next layer
     prev_tp_idx = idx_dis   # The node holding the sick people
     prev_fp_idx = idx_health # The node holding the healthy people
     
@@ -79,12 +66,7 @@ def create_sankey(results):
         t_name = step['test_name']
         base_idx = len(labels)
         
-        # We create 4 explicit nodes for every test to prevent merging logic errors
-        # 1. TP Node (Passes to next test)
-        # 2. FN Node (Stops here)
-        # 3. FP Node (Passes to next test)
-        # 4. TN Node (Stops here)
-        
+        # Create 4 explicit nodes for every test layer
         new_labels = [
             f"{t_name} TP", 
             f"{t_name} FN (Miss)", 
@@ -104,15 +86,13 @@ def create_sankey(results):
         
         # --- LINKS FROM PREVIOUS LAYER ---
         
-        # 1. Diseased Stream (From prev_tp_idx)
-        # Splits into TP (Keep going) and FN (Stop)
+        # 1. Diseased Stream (From prev_tp_idx) -> TP & FN
         sources.extend([prev_tp_idx, prev_tp_idx])
         targets.extend([idx_tp, idx_fn])
         values.extend([step['TP'], step['FN']])
         link_colors.extend([COLORS["LinkTP"], COLORS["LinkFN"]])
         
-        # 2. Healthy Stream (From prev_fp_idx)
-        # Splits into FP (Keep going) and TN (Stop)
+        # 2. Healthy Stream (From prev_fp_idx) -> FP & TN
         sources.extend([prev_fp_idx, prev_fp_idx])
         targets.extend([idx_fp, idx_tn])
         values.extend([step['FP'], step['TN']])
@@ -130,7 +110,9 @@ def create_sankey(results):
             thickness=20,
             line=dict(color="black", width=0.5),
             label=labels,
-            color=colors
+            color=colors,
+            # Improved text readability
+            textfont=dict(color="white", size=12)
         ),
         link=dict(
             source=sources,
@@ -140,7 +122,7 @@ def create_sankey(results):
         )
     )])
     
-    fig.update_layout(title_text="Sequential Screening Flow", font_size=12, height=450)
+    fig.update_layout(title_text="Sequential Screening Flow", font_size=14, height=450)
     return fig
 
 def create_waffle_chart(tp, fp, fn, tn, title, total_dots=625):
@@ -206,6 +188,9 @@ def create_ground_truth_waffle(diseased, healthy, title, total_dots=625):
     Special Waffle for Ground Truth (2 Categories).
     """
     total = diseased + healthy
+    if total == 0: return go.Figure()
+    
+    # Normalized counts
     c_dis = int(round(total_dots * (diseased / total)))
     c_health = total_dots - c_dis
     
@@ -219,6 +204,7 @@ def create_ground_truth_waffle(diseased, healthy, title, total_dots=625):
     
     idx, rows, cols = 0, 25, 25
     for label, count, color, real_val in count_map:
+        pct = (real_val / total * 100) if total > 0 else 0
         for _ in range(count):
             if idx >= total_dots: break
             r = idx // cols
@@ -226,7 +212,7 @@ def create_ground_truth_waffle(diseased, healthy, title, total_dots=625):
             x_vals.append(c)
             y_vals.append(rows - r - 1)
             colors.append(color)
-            texts.append(f"{label}: {real_val}")
+            texts.append(f"<b>{label}</b><br>Count: {real_val}<br>({pct:.1f}%)")
             idx += 1
             
     fig = go.Figure(data=go.Scatter(
