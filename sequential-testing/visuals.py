@@ -6,7 +6,7 @@ import math
 # ---------------------------------------------------------
 # We use distinct colors for TP/FP/TN/FN to create a traffic-light effect.
 COLORS = {
-    "TP": "#E67E22",       # Orange (Detected Disease)
+    "TP": "#6495ED",       # Blue (Detected Disease)
     "FP": "#FBC02D",       # Yellow (Warning / False Alarm)
     "TN": "#43A047",       # Green (Safe / Correctly Cleared)
     "FN": "#D32F2F",       # Bright Red (Danger / Missed Case)
@@ -19,7 +19,7 @@ COLORS = {
     "LinkHealthy": "rgba(46, 125, 50, 0.4)",   # Matching Green
     "LinkFN": "rgba(211, 47, 47, 0.6)",        # Red for Missed
     "LinkFP": "rgba(251, 192, 45, 0.6)",       # Yellow for False Alarm
-    "LinkTP": "rgba(230, 126, 34, 0.6)",       # Orange for Detection
+    "LinkTP": "rgba(41, 128, 185, 0.3)",       # Blue for Detection
     "LinkTN": "rgba(67, 160, 71, 0.2)"         # Light Green for Safe
 }
 
@@ -55,8 +55,8 @@ def create_sankey(results):
     
     # We define the order we want to add them. 
     # Tuple structure: (Name, Count, Color, LinkColor, TypeKey)
-    d_data = ("Diseased (Truth)", num_d, COLORS["Diseased"], COLORS["LinkDiseased"], "D")
-    h_data = ("Healthy (Truth)", num_h, COLORS["Healthy"], COLORS["LinkHealthy"], "H")
+    d_data = ("Diseased", num_d, COLORS["Diseased"], COLORS["LinkDiseased"], "D")
+    h_data = ("Healthy", num_h, COLORS["Healthy"], COLORS["LinkHealthy"], "H")
     
     # If Diseased is smaller (or equal), it goes first. Otherwise Healthy goes first.
     if num_d <= num_h:
@@ -177,7 +177,7 @@ def create_waffle_chart(tp, fp, fn, tn, title, total_dots=625):
     rows, cols = 25, 25
     x_vals, y_vals, colors, texts = [], [], [], []
     
-    # Fill Order: TP(Orange) -> FN(Red) -> FP(Yellow) -> TN(Green)
+    # Fill Order: TP(Blue) -> FN(Red) -> FP(Yellow) -> TN(Green)
     fill_order = ["TP", "FN", "FP", "TN"]
     
     current_idx = 0

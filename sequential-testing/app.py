@@ -183,7 +183,7 @@ with row3_left:
     """, unsafe_allow_html=True)
     fig_truth = visuals.create_ground_truth_waffle(
         summary['Diseased'], summary['Healthy'], 
-        title="Ground Truth Breakdown"
+        title="Disease Prevalence"
     )
     st.plotly_chart(fig_truth, use_container_width=True)
 
@@ -197,7 +197,7 @@ with row3_right:
     fig_final = visuals.create_waffle_chart(
         summary['Final TP'], summary['Final FP'], 
         summary['Final FN'], summary['Final TN'],
-        title="Final Screening Outcome"
+        title="Screening Approach Results"
     )
     st.plotly_chart(fig_final, use_container_width=True)
 
