@@ -178,7 +178,7 @@ with row3_left:
     """, unsafe_allow_html=True)
     fig_truth = visuals.create_ground_truth_waffle(
         summary['Diseased'], summary['Healthy'], 
-        title="Ground Truth Breakdown"
+        title="Disease Prevalence"
     )
     st.plotly_chart(fig_truth, use_container_width=True)
 
@@ -192,7 +192,7 @@ with row3_right:
     fig_final = visuals.create_waffle_chart(
         summary['Final TP'], summary['Final FP'], 
         summary['Final FN'], summary['Final TN'],
-        title="Final Screening Outcome"
+        title="Screening Approach Results"
     )
     st.plotly_chart(fig_final, use_container_width=True)
 
@@ -220,10 +220,10 @@ for step in results['history']:
         - <span style='color:#FBC02D'><b>FP:</b> {step['FP']}</span> | <span style='color:#43A047'><b>TN:</b> {step['TN']}</span>
         
         **Metrics:**
-        1.  **Sens:** {step['sens']:.1f}% | **Spec:** {step['spec']:.1f}%
-        2.  **Pos Rate:** {step['pos_rate']*100:.1f}% | **Neg Rate:** {step['neg_rate']*100:.1f}%
-        3.  **PPV:** {step_ppv:.1f}% | **NPV:** {step_npv:.1f}%
-        4.  **LR+:** {step['lr_plus']:.1f} | **LR-:** {step['lr_minus']:.2f}
+        -  **Sensitivity:** {step['sens']:.1f}% | **Specificity:** {step['spec']:.1f}%
+        -  **Screen Positivity Rate:** {step['pos_rate']*100:.1f}% | **Screen Negativity Rate:** {step['neg_rate']*100:.1f}%
+        -  **PPV:** {step_ppv:.1f}% | **NPV:** {step_npv:.1f}%
+        -  **LR+:** {step['lr_plus']:.1f} | **LR-:** {step['lr_minus']:.2f}
         """, unsafe_allow_html=True)
         
     with c_right:

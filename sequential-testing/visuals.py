@@ -26,7 +26,7 @@ COLORS = {
 def create_sankey(results):
     """
     Creates a rigorous Sequential Sankey Diagram.
-    The node text is styled for high readability.
+    The node text is styled for high readability in light mode.
     The 'Truth' layer is ordered to try and place 'Diseased' on top.
     """
     summary = results['summary']
@@ -69,9 +69,9 @@ def create_sankey(results):
         # Create 4 explicit nodes for every test layer
         new_labels = [
             f"{t_name} TP", 
-            f"{t_name} FN (Miss)", 
-            f"{t_name} FP (Alarm)", 
-            f"{t_name} TN (Safe)"
+            f"{t_name} FN", 
+            f"{t_name} FP", 
+            f"{t_name} TN"
         ]
         labels.extend(new_labels)
         
@@ -105,14 +105,15 @@ def create_sankey(results):
 
     # --- GENERATE FIGURE ---
     fig = go.Figure(data=[go.Sankey(
+        # FIX: textfont belongs here, at the trace level.
+        # Set to black for readability in light mode.
+        textfont=dict(color="black", size=12),
         node=dict(
             pad=15,
             thickness=20,
             line=dict(color="black", width=0.5),
             label=labels,
-            color=colors,
-            # Improved text readability
-            textfont=dict(color="white", size=12)
+            color=colors
         ),
         link=dict(
             source=sources,
