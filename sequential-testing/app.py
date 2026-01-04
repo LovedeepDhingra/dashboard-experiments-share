@@ -191,7 +191,7 @@ with row3_right:
     st.markdown("### Screening Approach Results")
     st.markdown(f"""
     **Final Classification:**
-    * <span style='color:#E67E22'>**TP:** {summary['Final TP']}</span> | <span style='color:#D32F2F'>**FN:** {summary['Final FN']}</span>
+    * <span style='color:#6495ED'>**TP:** {summary['Final TP']}</span> | <span style='color:#D32F2F'>**FN:** {summary['Final FN']}</span>
     * <span style='color:#FBC02D'>**FP:** {summary['Final FP']}</span> | <span style='color:#43A047'>**TN:** {summary['Final TN']}</span>
     """, unsafe_allow_html=True)
     fig_final = visuals.create_waffle_chart(
@@ -221,7 +221,7 @@ for step in results['history']:
         **Input N:** {step['input_n']}
         
         **Counts:**
-        - <span style='color:#E67E22'><b>TP:</b> {step['TP']}</span> | <span style='color:#D32F2F'><b>FN:</b> {step['FN']}</span>
+        - <span style='color:#6495ED'><b>TP:</b> {step['TP']}</span> | <span style='color:#D32F2F'><b>FN:</b> {step['FN']}</span>
         - <span style='color:#FBC02D'><b>FP:</b> {step['FP']}</span> | <span style='color:#43A047'><b>TN:</b> {step['TN']}</span>
         
         **Metrics:**
